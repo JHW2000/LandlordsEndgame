@@ -2,8 +2,10 @@
 # -*- coding: UTF-8 -*-
 
 # 依赖
+from __future__ import print_function
 import copy
 from itertools import combinations
+
 
 # 输入
 playerA = []
@@ -173,14 +175,15 @@ def searchTree(playerA, playerB, pattern, size, level, parent):
     moves = getNextMove(playerA, pattern, size)
     for i, move in enumerate(moves):
         if level < 2:
-            print '  ' * level * 2 + '正在尝试', i, '/', len(moves)
+            pass
+            print(' ' * level * 2 + '正在尝试', i, '/', len(moves))
         newPlayerA = copy.deepcopy(playerA)
         removeElements(newPlayerA, move['c'])
         count += 1
         temp = count
         tree.append([0, move['c'], []])
         tree[parent][2].append(count)
-        # print '  ' * level * 2 + 'D ->', move['c'], '|', newPlayerA
+        # print('  ' * level * 2 + 'D ->', move['c'], '|', newPlayerA)
         if len(newPlayerA) == 0:
             tree[count][0] = 1
             return 1
@@ -189,13 +192,14 @@ def searchTree(playerA, playerB, pattern, size, level, parent):
             moves_ = getNextMove(playerB, move['p'], move['s'])
             for j, move_ in enumerate(moves_):
                 if level < 2:
-                    print '  ' * (level * 2 + 1) + '正在尝试', j, '/', len(moves_)
+                    pass
+                    print('  ' * (level * 2 + 1) + '正在尝试', j, '/', len(moves_))
                 newPlayerB = copy.deepcopy(playerB)
                 removeElements(newPlayerB, move_['c'])
                 count += 1
                 tree.append([0, move_['c'], []])
                 tree[temp][2].append(count)
-                # print '  ' * (level * 2 + 1) + 'N ->', move_['c'], '|', newPlayerB
+                # print('  ' * (level * 2 + 1) + 'N ->', move_['c'], '|', newPlayerB)
                 if len(newPlayerB) == 0 or searchTree(newPlayerA, newPlayerB, move_['p'], move_['s'], level + 1, count) == 0:
                     flag = 0
                     break
@@ -207,6 +211,14 @@ def searchTree(playerA, playerB, pattern, size, level, parent):
                 count = temp - 1
     return 0
 
+
+# 计算剩余牌张组合
+def remainCard(player, del_object):
+    for i in range(len(del_object)):
+        player.remove(del_object[i])
+    return player
+
+
 # 主体
 playerAStr = raw_input('请输入地主牌：')
 playerBStr = raw_input('请输入农民牌：')
@@ -216,20 +228,40 @@ playerB = playerBStr.split()
 # 使用数值代替牌面
 getVal(playerA)
 getVal(playerB)
+remain_playerA = playerA
+remain_playerB = playerB
 
 # 搜索对抗树
 if searchTree(playerA, playerB, -1, -1, 0, root):
-    print '完成！'
+    print('完成！')
     flag = 1
     while flag:
         flag = 0
         for node in tree[root][2]:
             if tree[node][0] == 1:
-                print '地主应出', getCard(tree[node][1])
+                print('地主应出', getCard(tree[node][1]))
+                print('')
                 root = node
+                # 更新A当前剩下的牌
+                remain_playerA = remainCard(remain_playerA, tree[node][1])
+                # 打印当前A和B剩下的牌
+                list_playerA = getCard(remain_playerA)
+                list_playerB = getCard(remain_playerB)
+                print('地主剩余牌张')
+                for i in range(len(list_playerA)):
+                    print (list_playerA[i], end = " ")
+                print('')
+                print('农民剩余牌张')
+                for i in range(len(list_playerB)):
+                    print (list_playerB[i], end = " ")
+                print('')
                 moveStr = raw_input('请输入农民的出牌：')
                 move = moveStr.split()
                 getVal(move)
+
+                # 更新B当前剩下的牌
+                remain_playerB = remainCard(remain_playerB, move)
+
                 for node_ in tree[root][2]:
                     if sorted(tree[node_][1]) == sorted(move):
                         root = node_
@@ -237,4 +269,4 @@ if searchTree(playerA, playerB, -1, -1, 0, root):
                 flag = 1
                 break
 else:
-    print '失败！'
+    print('失败！')
